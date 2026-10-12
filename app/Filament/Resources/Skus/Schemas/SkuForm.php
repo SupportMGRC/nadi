@@ -2,9 +2,14 @@
 
 namespace App\Filament\Resources\Skus\Schemas;
 
+use App\Models\Product;
+use App\Models\Sku;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class SkuForm
 {
@@ -17,7 +22,8 @@ class SkuForm
                     ->relationship('product', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->live(),
 
                 TextInput::make('sku_code')
                     ->label('SKU code')
@@ -66,6 +72,38 @@ class SkuForm
                     ])
                     ->default('active')
                     ->required(),
+
+                Repeater::make('components')
+                    ->label('Bundle contents')
+                    ->relationship()
+                    ->schema([
+                        Select::make('component_sku_id')
+                            ->label('Component')
+                            ->relationship(
+                                'componentSku',
+                                'sku_code',
+                                fn (Builder $query) => $query->whereHas(
+                                    'product',
+                                    fn (Builder $q) => $q->where('type', '!=', 'bundle')
+                                ),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn (Sku $record) => "{$record->sku_code} — {$record->product->name}")
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+
+                        TextInput::make('qty')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->default(1)
+                            ->required(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->addActionLabel('Add component')
+                    ->visible(fn (Get $get): bool => Product::find($get('product_id'))?->type === 'bundle'),
             ]);
     }
 }
