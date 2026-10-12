@@ -32,8 +32,14 @@ class Sku extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
     public function components(): HasMany
-{
-    return $this->hasMany(BundleComponent::class, 'bundle_sku_id');
-}
+    {
+        return $this->hasMany(BundleComponent::class, 'bundle_sku_id');
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class);
+    }
 }
