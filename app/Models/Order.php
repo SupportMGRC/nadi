@@ -40,12 +40,15 @@ class Order extends Model
         'customer_email',
         'shipping_address',
         'status',
+        'payment_status',
+        'fulfillment_status',
         'shipping_fee',
         'discount',
         'total',
         'notes',
         'confirmed_at',
         'cancelled_at',
+        'imported_at',
         'created_by',
     ];
 
@@ -55,6 +58,7 @@ class Order extends Model
             'order_date' => 'date',
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'imported_at' => 'datetime',
             'shipping_fee' => 'decimal:2',
             'discount' => 'decimal:2',
             'total' => 'decimal:2',

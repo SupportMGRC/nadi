@@ -20,6 +20,10 @@ class OrdersTable
                     ->label('Order no.')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('external_ref')
+                    ->label('Shopify / Tiktok no.')
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('order_date')
                     ->date('d M Y')
                     ->sortable(),
