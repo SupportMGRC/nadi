@@ -154,6 +154,16 @@ class PurchaseOrderActions
             ));
     }
 
+    public static function downloadPdf(): Action
+    {
+        return Action::make('downloadPoPdf')
+            ->label('Download PDF')
+            ->icon('heroicon-o-document-arrow-down')
+            ->color('gray')
+            ->url(fn (PurchaseOrder $record): string => route('purchase-orders.pdf', $record))
+            ->openUrlInNewTab();
+    }
+
     public static function cancel(): Action
     {
         return Action::make('cancelPo')

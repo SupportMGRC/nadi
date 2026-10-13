@@ -53,6 +53,7 @@ class PurchaseOrdersTable
                 EditAction::make()
                     ->label(fn (PurchaseOrder $record): string => $record->isDraft() ? 'Edit' : 'View'),
                 ActionGroup::make([
+                    PurchaseOrderActions::downloadPdf(),
                     PurchaseOrderActions::submit(),
                     PurchaseOrderActions::approve(),
                     PurchaseOrderActions::returnToDraft(),

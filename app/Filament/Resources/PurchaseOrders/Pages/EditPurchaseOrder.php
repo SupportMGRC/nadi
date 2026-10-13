@@ -16,6 +16,7 @@ class EditPurchaseOrder extends EditRecord
         $reload = fn () => $this->redirect(PurchaseOrderResource::getUrl('edit', ['record' => $this->record]));
 
         return [
+            PurchaseOrderActions::downloadPdf(),
             PurchaseOrderActions::submit()
                 // Save whatever is on screen first, so you can't submit stale data
                 ->before(fn () => $this->save(shouldRedirect: false, shouldSendSavedNotification: false))
