@@ -2,19 +2,25 @@
 
 return [
 
-    // Letterhead printed on purchase orders.
-    // Confirm with RHYTHM / MGRC procurement whose details go here.
+    // Letterhead printed on purchase orders
     'company' => [
-        'name'     => 'RHYTHM',
-        'legal'    => 'Company Sdn Bhd (Reg. No. 000000-X)',
-        'address'  => "Address line 1\nAddress line 2\nKuala Lumpur, Malaysia",
-        'phone'    => '+60 3-0000 0000',
-        'email'    => 'rhythm@example.com',
+        'name'     => 'MGRC Biopharma Sdn Bhd',
+        'legal'    => '',   // company registration no. (optional, add when known)
+        'address'  => "8F, Jalan Teknologi 3/6, Taman Sains Selangor 1,\nPJU 5 Kota Damansara, 47810 Petaling Jaya,\nSelangor, Malaysia",
+        'phone'    => '03-7890 0015',
+        'email'    => 'joana@mgrc.com.my',
     ],
 
     // Where suppliers should deliver to
-    'delivery_address' => "RHYTHM c/o MGRC\nAddress line 1\nKuala Lumpur, Malaysia",
+    'delivery_address' => "MGRC Biopharma Sdn Bhd\n8F, Jalan Teknologi 3/6, Taman Sains Selangor 1,\nPJU 5 Kota Damansara, 47810 Petaling Jaya,\nSelangor, Malaysia",
 
-    // Optional logo: put a PNG at public/images/po-logo.png
+    // Logo: PNG at public/images/po-logo.png
     'po_logo' => 'images/po-logo.png',
+
+    // Currencies allowed on suppliers and POs (ISO codes)
+    'currencies' => [
+        'MYR' => 'MYR - Malaysian Ringgit',
+        'USD' => 'USD - US Dollar',
+        'CNY' => 'CNY - Chinese Renminbi (RMB)',
+    ],
 ];

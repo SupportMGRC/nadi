@@ -55,7 +55,9 @@
                     <img src="{{ $logo }}" style="height: 45px; margin-bottom: 6px;"><br>
                 @endif
                 <div class="company-name">{{ $company['name'] }}</div>
-                <div class="muted">{{ $company['legal'] }}</div>
+                                @if (! empty($company['legal']))
+                    <div class="muted">{{ $company['legal'] }}</div>
+                @endif
                 <div class="muted pre">{{ $company['address'] }}</div>
                 <div class="muted">{{ $company['phone'] }} · {{ $company['email'] }}</div>
             </td>

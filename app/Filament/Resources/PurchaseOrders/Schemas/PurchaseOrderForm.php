@@ -75,12 +75,7 @@ class PurchaseOrderForm
                         ->label('Expected delivery')
                         ->disabled($locked),
                     Select::make('currency')
-                        ->options([
-                            'MYR' => 'MYR',
-                            'USD' => 'USD',
-                            'SGD' => 'SGD',
-                            'EUR' => 'EUR',
-                        ])
+                        ->options(config('nadi.currencies'))
                         ->default('MYR')
                         ->required()
                         ->disabled($locked),

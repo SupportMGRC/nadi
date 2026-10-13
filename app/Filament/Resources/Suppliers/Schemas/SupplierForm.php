@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Suppliers\Schemas;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
 class SupplierForm
@@ -25,9 +26,10 @@ class SupplierForm
                 Textarea::make('address')
                     ->columnSpanFull(),
                 TextInput::make('payment_terms'),
-                TextInput::make('currency')
-                    ->required()
-                    ->default('MYR'),
+                Select::make('currency')
+                    ->options(config('nadi.currencies'))
+                    ->default('MYR')
+                    ->required(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
                 Toggle::make('is_active')
