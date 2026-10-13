@@ -5,8 +5,6 @@ namespace App\Filament\Resources\Batches\Tables;
 use App\Models\Batch;
 use App\Services\StockService;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -61,10 +59,12 @@ class BatchesTable
                     ->relationship('sku', 'sku_code'),
             ])
             ->recordActions([
+                // Manual receive (outside a PO) — admin only. Normal deliveries go through PO → Receive goods.
                 Action::make('receive')
                     ->label('Receive')
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('success')
+                    ->visible(fn (): bool => (bool) auth()->user()?->isAdmin())
                     ->schema([
                         TextInput::make('qty')
                             ->label('Quantity received')
@@ -73,7 +73,7 @@ class BatchesTable
                             ->minValue(1)
                             ->required(),
                         Textarea::make('notes')
-                            ->placeholder('e.g. PO number, delivery order no.'),
+                            ->placeholder('e.g. opening stock, delivery order no.'),
                     ])
                     ->action(function (Batch $record, array $data): void {
                         app(StockService::class)->receive($record, (int) $data['qty'], $data['notes'] ?? null);
@@ -84,10 +84,12 @@ class BatchesTable
                             ->send();
                     }),
 
+                // Stock correction (recount, damage) — admin only
                 Action::make('adjust')
                     ->label('Adjust')
                     ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
                     ->color('warning')
+                    ->visible(fn (): bool => (bool) auth()->user()?->isAdmin())
                     ->schema([
                         TextInput::make('qty')
                             ->label('Change')
@@ -117,12 +119,8 @@ class BatchesTable
                             ->send();
                     }),
 
+                // Hidden automatically for normal users (policy: update = admin)
                 EditAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
             ]);
     }
 }

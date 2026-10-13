@@ -39,7 +39,7 @@ class PurchaseOrderActions
             ->label('Approve')
             ->icon('heroicon-o-check-badge')
             ->color('success')
-            ->visible(fn (PurchaseOrder $record): bool => $record->status === PurchaseOrder::STATUS_SUBMITTED)
+            ->visible(fn (PurchaseOrder $record): bool => $record->status === PurchaseOrder::STATUS_SUBMITTED && (bool) auth()->user()?->isAdmin())
             ->requiresConfirmation()
             ->modalHeading(fn (PurchaseOrder $record): string => "Approve {$record->po_no}?")
             ->modalSubmitActionLabel('Yes, approve')
@@ -55,7 +55,7 @@ class PurchaseOrderActions
             ->label('Return to draft')
             ->icon('heroicon-o-arrow-uturn-left')
             ->color('gray')
-            ->visible(fn (PurchaseOrder $record): bool => $record->status === PurchaseOrder::STATUS_SUBMITTED)
+            ->visible(fn (PurchaseOrder $record): bool => $record->status === PurchaseOrder::STATUS_SUBMITTED && (bool) auth()->user()?->isAdmin())
             ->schema([
                 Textarea::make('reason')
                     ->label('What needs to change?')
