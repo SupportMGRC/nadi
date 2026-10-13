@@ -155,6 +155,27 @@ class PurchaseOrderForm
                         ->rows(3)
                         ->disabled($locked),
                 ]),
+
+            Section::make('Receiving')
+                ->description('What has arrived so far, and into which batches.')
+                ->columnSpanFull()
+                ->visible(fn (?PurchaseOrder $record): bool => $record !== null && in_array($record->status, [
+                    PurchaseOrder::STATUS_ORDERED,
+                    PurchaseOrder::STATUS_PARTIAL,
+                    PurchaseOrder::STATUS_RECEIVED,
+                ], true))
+                ->schema([
+                    TextEntry::make('receiving_summary')
+                        ->hiddenLabel()
+                        ->state(fn (?PurchaseOrder $record): array => $record
+                            ? $record->items()->with(['sku', 'batches'])->get()
+                                ->map(fn ($item) => "{$item->sku->sku_code} — {$item->qty_received} / {$item->qty_ordered} received"
+                                    . ($item->batches->isNotEmpty() ? ' · batch ' . $item->batches->pluck('batch_no')->join(', ') : ''))
+                                ->all()
+                            : [])
+                        ->listWithLineBreaks()
+                        ->bulleted(),
+                ]),
         ]);
     }
 

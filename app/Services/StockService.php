@@ -14,13 +14,13 @@ class StockService
     /**
      * Stock arriving from the supplier.
      */
-    public function receive(Batch $batch, int $qty, ?string $notes = null): StockMovement
+    public function receive(Batch $batch, int $qty, ?string $notes = null, ?Model $reference = null): StockMovement
     {
         if ($qty <= 0) {
             throw new InvalidArgumentException('Received quantity must be more than 0.');
         }
 
-        return $this->record($batch, $qty, 'receive', $notes);
+        return $this->record($batch, $qty, 'receive', $notes, $reference);
     }
 
     /**

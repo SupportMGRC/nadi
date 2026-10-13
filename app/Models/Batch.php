@@ -10,6 +10,7 @@ class Batch extends Model
 {
     protected $fillable = [
         'sku_id',
+        'purchase_order_item_id',
         'batch_no',
         'received_date',
         'expiry_date',
@@ -28,6 +29,11 @@ class Batch extends Model
     public function sku(): BelongsTo
     {
         return $this->belongsTo(Sku::class);
+    }
+
+    public function purchaseOrderItem(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrderItem::class);
     }
 
     public function movements(): HasMany

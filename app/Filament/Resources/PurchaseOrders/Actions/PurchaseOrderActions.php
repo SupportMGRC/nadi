@@ -5,8 +5,13 @@ namespace App\Filament\Resources\PurchaseOrders\Actions;
 use App\Models\PurchaseOrder;
 use App\Services\PurchaseOrderService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use InvalidArgumentException;
 
 class PurchaseOrderActions
@@ -78,6 +83,74 @@ class PurchaseOrderActions
             ->action(fn (PurchaseOrder $record) => self::run(
                 fn () => app(PurchaseOrderService::class)->markOrdered($record),
                 "{$record->po_no} marked as ordered",
+            ));
+    }
+
+    public static function receive(): Action
+    {
+        return Action::make('receivePo')
+            ->label('Receive goods')
+            ->icon('heroicon-o-inbox-arrow-down')
+            ->color('success')
+            ->visible(fn (PurchaseOrder $record): bool => in_array($record->status, [
+                PurchaseOrder::STATUS_ORDERED,
+                PurchaseOrder::STATUS_PARTIAL,
+            ], true))
+            ->modalHeading(fn (PurchaseOrder $record): string => "Receive goods — {$record->po_no}")
+            ->modalDescription('Enter what actually arrived. Leave qty at 0 for items not in this delivery.')
+            ->modalWidth('5xl')
+            ->fillForm(fn (PurchaseOrder $record): array => [
+                'received_date' => today()->toDateString(),
+                'lines' => $record->items()->with('sku')->get()
+                    ->filter(fn ($item) => $item->qtyOutstanding() > 0)
+                    ->map(fn ($item) => [
+                        'purchase_order_item_id' => $item->id,
+                        'sku_label'   => $item->sku->sku_code,
+                        'outstanding' => $item->qtyOutstanding(),
+                        'qty'         => $item->qtyOutstanding(),
+                        'batch_no'    => null,
+                        'expiry_date' => null,
+                    ])
+                    ->values()
+                    ->all(),
+            ])
+            ->schema([
+                DatePicker::make('received_date')
+                    ->label('Date received')
+                    ->maxDate(today())
+                    ->required(),
+                Repeater::make('lines')
+                    ->hiddenLabel()
+                    ->addable(false)
+                    ->deletable(false)
+                    ->reorderable(false)
+                    ->columns(5)
+                    ->schema([
+                        Hidden::make('purchase_order_item_id'),
+                        TextInput::make('sku_label')
+                            ->label('SKU')
+                            ->disabled(),
+                        TextInput::make('outstanding')
+                            ->label('Outstanding')
+                            ->disabled(),
+                        TextInput::make('qty')
+                            ->label('Qty received')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->maxValue(fn (Get $get): int => (int) $get('outstanding'))
+                            ->required(),
+                        TextInput::make('batch_no')
+                            ->label('Batch no.')
+                            ->required(fn (Get $get): bool => (int) $get('qty') > 0),
+                        DatePicker::make('expiry_date')
+                            ->label('Expiry'),
+                    ]),
+            ])
+            ->modalSubmitActionLabel('Receive')
+            ->action(fn (PurchaseOrder $record, array $data) => self::run(
+                fn () => app(PurchaseOrderService::class)->receive($record, $data['received_date'], $data['lines'] ?? []),
+                "Goods received for {$record->po_no}",
             ));
     }
 

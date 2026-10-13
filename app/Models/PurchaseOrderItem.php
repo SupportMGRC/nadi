@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseOrderItem extends Model
 {
@@ -43,6 +44,10 @@ class PurchaseOrderItem extends Model
         return $this->belongsTo(Sku::class);
     }
 
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class);
+    }
     public function qtyOutstanding(): int
     {
         return max(0, $this->qty_ordered - $this->qty_received);

@@ -23,6 +23,7 @@ class EditPurchaseOrder extends EditRecord
             PurchaseOrderActions::approve()->after($reload),
             PurchaseOrderActions::returnToDraft()->after($reload),
             PurchaseOrderActions::markOrdered()->after($reload),
+            PurchaseOrderActions::receive()->after($reload),
             PurchaseOrderActions::cancel()->after($reload),
             DeleteAction::make()
                 ->visible(fn (): bool => $this->record->isDraft()),

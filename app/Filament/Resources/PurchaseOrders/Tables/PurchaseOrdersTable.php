@@ -57,6 +57,7 @@ class PurchaseOrdersTable
                     PurchaseOrderActions::approve(),
                     PurchaseOrderActions::returnToDraft(),
                     PurchaseOrderActions::markOrdered(),
+                    PurchaseOrderActions::receive(),
                     PurchaseOrderActions::cancel(),
                 ]),
             ]);

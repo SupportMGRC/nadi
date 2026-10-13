@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Batch;
 use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class PurchaseOrderService
 {
+    public function __construct(protected StockService $stock)
+    {
+    }
+
     /**
      * Draft → Submitted (sent for approval). Must have at least one item.
      */
@@ -77,6 +82,90 @@ class PurchaseOrderService
 
             $po->status = PurchaseOrder::STATUS_ORDERED;
             $po->ordered_at = now();
+            $po->save();
+
+            return $po;
+        });
+    }
+
+    /**
+     * Goods arrived. Each line: purchase_order_item_id, qty, batch_no, expiry_date (optional).
+     * Lines with qty 0 are skipped. All-or-nothing: one bad line rolls back everything.
+     */
+    public function receive(PurchaseOrder $po, string $receivedDate, array $lines): PurchaseOrder
+    {
+        return DB::transaction(function () use ($po, $receivedDate, $lines) {
+            $po = $this->lock($po);
+            $this->expectStatus($po, [
+                PurchaseOrder::STATUS_ORDERED,
+                PurchaseOrder::STATUS_PARTIAL,
+            ], 'receive goods for');
+
+            $po->load('supplier');
+            $totalReceived = 0;
+
+            foreach ($lines as $line) {
+                $qty = (int) ($line['qty'] ?? 0);
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                $item = $po->items()
+                    ->with('sku')
+                    ->whereKey($line['purchase_order_item_id'] ?? 0)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $skuCode = $item->sku->sku_code;
+
+                if ($qty > $item->qtyOutstanding()) {
+                    throw new InvalidArgumentException(
+                        "{$skuCode}: receiving {$qty} but only {$item->qtyOutstanding()} outstanding."
+                    );
+                }
+
+                $batchNo = trim((string) ($line['batch_no'] ?? ''));
+                if ($batchNo === '') {
+                    throw new InvalidArgumentException("{$skuCode}: batch no. is required.");
+                }
+
+                $batch = Batch::where('sku_id', $item->sku_id)
+                    ->where('batch_no', $batchNo)
+                    ->first();
+
+                if ($batch && (int) $batch->purchase_order_item_id !== (int) $item->id) {
+                    throw new InvalidArgumentException(
+                        "{$skuCode}: batch {$batchNo} already exists and is not from this PO line."
+                    );
+                }
+
+                if (! $batch) {
+                    $batch = Batch::create([
+                        'sku_id'                 => $item->sku_id,
+                        'purchase_order_item_id' => $item->id,
+                        'batch_no'               => $batchNo,
+                        'received_date'          => $receivedDate,
+                        'expiry_date'            => $line['expiry_date'] ?: null,
+                        'supplier'               => $po->supplier?->name,
+                        'notes'                  => "Received against {$po->po_no}",
+                    ]);
+                }
+
+                $this->stock->receive($batch, $qty, "Received against {$po->po_no}", $item);
+
+                $item->qty_received = $item->qty_received + $qty;
+                $item->save();
+
+                $totalReceived += $qty;
+            }
+
+            if ($totalReceived === 0) {
+                throw new InvalidArgumentException('Enter a quantity for at least one item.');
+            }
+
+            $allDone = $po->items()->whereColumn('qty_received', '<', 'qty_ordered')->doesntExist();
+
+            $po->status = $allDone ? PurchaseOrder::STATUS_RECEIVED : PurchaseOrder::STATUS_PARTIAL;
             $po->save();
 
             return $po;
